@@ -49,3 +49,34 @@ macro_rules! result_do(
     Ok($f)
   )
 )
+
+#[macro_export]
+macro_rules! result_for(
+  ($p:pat in $e:expr $bl:block) => ({
+    let mut itr_done = false;
+    let mut status = match ($e).next() {
+      Some(x) => match x {
+        Ok($p)   => { $bl; None },
+        Err(err) => Some(err) 
+      },
+      None    => {
+        itr_done = true;
+        None 
+      }
+    };
+
+    if !itr_done {
+      for x in $e {
+        match x {
+          Ok($p)   => { $bl; },
+          Err(err) => {
+            status = Some(err);
+            break;
+          }
+        }
+      }
+    }
+
+    status
+  });
+)
