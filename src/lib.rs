@@ -1,4 +1,5 @@
-#![crate_id = "static_mdo#0.0.1"]
+#![crate_name = "static_mdo"]
+#![crate_type = "rlib"]
 #![feature(macro_rules)]
 
 //! static_mdo
@@ -80,3 +81,39 @@ macro_rules! result_for(
     status
   });
 )
+
+/* this kinda works, but its wonky because
+ * matching the list of statements limits normal
+ * syntax like match x { ... }. seems like i want
+ * be able to match the "inside" of a block, but
+ * im not sure how to do that.
+ * macro_rules! result_for2(
+ *   ( [ $p:pat <- $e:expr ] $( $st:stmt );* ; ) => ({
+ *     let mut itr_done = false;
+ *     let mut status = match ($e).next() {
+ *       Some(x) => match x {
+ *         Ok($p)   => { { $( $st );* }; None },
+ *         Err(err) => Some(err) 
+ *       },
+ *       None    => {
+ *         itr_done = true;
+ *         None 
+ *       }
+ *     };
+ * 
+ *     if !itr_done {
+ *       for x in $e {
+ *         match x {
+ *           Ok($p)   => { { $( $st );* }; },
+ *           Err(err) => {
+ *             status = Some(err);
+ *             break;
+ *           }
+ *         }
+ *       }
+ *     }
+ * 
+ *     status
+ *   });
+ * )
+ */

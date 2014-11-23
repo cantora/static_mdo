@@ -1,2 +1,4 @@
 *.rlib
 scratch
+Cargo.lock
+target/
