@@ -90,7 +90,7 @@ macro_rules! result_for(
  */
 #[macro_export]
 macro_rules! result_repeat(
-  ($p:pat <- $e:expr $bl:block) => ({
+  ( [ $p:pat <- $e:expr ] $bl:block) => ({
     let mut status = $e;
 
     loop {
@@ -123,6 +123,16 @@ macro_rules! result_repeat(
   });
 )
 
+macro_rules! result_err(
+  ( [ $p:pat <- $e:expr ] $bl:block) => ({
+    match $e {
+      Err($p) => { $bl; }
+      _       => {      }
+    }
+  });
+)
+
+#[macro_export]
 /* this kinda works, but its wonky because
  * matching the list of statements limits normal
  * syntax like match x { ... }. seems like i want
