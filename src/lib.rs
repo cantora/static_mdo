@@ -82,6 +82,47 @@ macro_rules! result_for(
   });
 )
 
+/**********************
+ * repeatedly evaluate an expression that
+ * produces a result-like type until that
+ * expression produces an Err(...), then
+ * return that error.
+ */
+#[macro_export]
+macro_rules! result_repeat(
+  ($p:pat <- $e:expr $bl:block) => ({
+    let mut status = $e;
+
+    loop {
+      match status {
+        Ok($p) => { $bl;   }
+        _      => { break; }
+      }
+
+      status = $e;
+    }
+
+    status
+  });
+
+  ($e:expr $bl:block) => ({
+    let mut status = $e;
+
+    loop {
+      if status.is_ok() {
+        $bl;
+      }
+      else {
+        break;
+      }
+
+      status = $e;
+    }
+
+    status
+  });
+)
+
 /* this kinda works, but its wonky because
  * matching the list of statements limits normal
  * syntax like match x { ... }. seems like i want
