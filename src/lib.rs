@@ -105,7 +105,7 @@ macro_rules! result_repeat(
     status
   });
 
-  ($e:expr $bl:block) => ({
+  ( [ $e:expr $bl:block ] ) => ({
     let mut status = $e;
 
     loop {
