@@ -52,6 +52,30 @@ macro_rules! result_do(
 )
 
 #[macro_export]
+macro_rules! result_tag_do(
+  (let $p:path = $e:expr ; $( $t:tt )*) => (
+    { let $p = $e ; result_tag_do! { $( $t )* } }
+  );
+
+  ($tag:expr : $p:pat <- $e:expr ; $( $t:tt )*) => (
+    match $e {
+      Ok($p)   => result_tag_do! { $( $t )* },
+      Err(err)   => Err(($tag, err))
+    }
+  );
+
+  (ign $e:expr ; $( $t:tt )*) => (
+    match $e {
+      _ => result_tag_do! { $( $t )* }
+    }
+  );
+
+  (ret $f:expr) => (
+    Ok($f)
+  )
+)
+
+#[macro_export]
 macro_rules! result_for(
   ($p:pat in $e:expr $bl:block) => ({
     let mut itr_done = false;
