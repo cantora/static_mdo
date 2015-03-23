@@ -1,6 +1,5 @@
 #![crate_name = "static_mdo"]
 #![crate_type = "rlib"]
-#![feature(macro_rules)]
 
 //! static_mdo
 /* monadic do notation without using closures.
@@ -18,12 +17,12 @@
  *
  * instr can be:
  *
- * * `pattern <- expression`: bind expression to pattern.
+ * * `pattern =<< expression`: bind expression to pattern.
  *
  * * `let pattern = expression`: assign expression to pattern, as
  *   normal rust let.
  *
- * * `ign expression`: equivalent to `_ <- expression`
+ * * `ign expression`: equivalent to `_ =<< expression`
  *
  */
 
@@ -33,7 +32,7 @@ macro_rules! result_do(
     { let $p = $e ; result_do! { $( $t )* } }
   );
 
-  ($p:pat <- $e:expr ; $( $t:tt )*) => (
+  ($p:pat =<< $e:expr ; $( $t:tt )*) => (
     match $e {
       Ok($p)   => result_do! { $( $t )* },
       Err(err)   => Err(err)
@@ -49,7 +48,8 @@ macro_rules! result_do(
   (ret $f:expr) => (
     Ok($f)
   )
-)
+);
+
 
 #[macro_export]
 macro_rules! result_tag_do(
@@ -57,7 +57,7 @@ macro_rules! result_tag_do(
     { let $p = $e ; result_tag_do! { $( $t )* } }
   );
 
-  ($tag:expr : $p:pat <- $e:expr ; $( $t:tt )*) => (
+  ($tag:expr => $p:pat =<< $e:expr ; $( $t:tt )*) => (
     match $e {
       Ok($p)   => result_tag_do! { $( $t )* },
       Err(err)   => Err(($tag, err))
@@ -73,11 +73,11 @@ macro_rules! result_tag_do(
   (ret $f:expr) => (
     Ok($f)
   )
-)
+);
 
 #[macro_export]
 macro_rules! result_for(
-  ($p:pat in $e:expr $bl:block) => ({
+  ($p:pat =in= $e:expr => $bl:block) => ({
     let mut itr_done = false;
     let mut status = match ($e).next() {
       Some(x) => match x {
@@ -104,7 +104,7 @@ macro_rules! result_for(
 
     status
   });
-)
+);
 
 /**********************
  * repeatedly evaluate an expression that
@@ -114,7 +114,7 @@ macro_rules! result_for(
  */
 #[macro_export]
 macro_rules! result_repeat(
-  ( $p:pat <- $e:expr => $bl:block) => ({
+  ( $p:pat =<< $e:expr => $bl:block) => ({
     let mut status = $e;
 
     loop {
@@ -145,7 +145,7 @@ macro_rules! result_repeat(
 
     status
   });
-)
+);
 
 #[macro_export]
 macro_rules! result_unwrap_or_return(
@@ -157,7 +157,7 @@ macro_rules! result_unwrap_or_return(
       Ok(unwrapped) => unwrapped
     }
   });
-  ( $p:pat <- $e:expr => $bl:block) => ({
+  ( $p:pat =<< $e:expr => $bl:block) => ({
     match $e {
       Err($p)       => {
         return $bl;
@@ -165,17 +165,17 @@ macro_rules! result_unwrap_or_return(
       Ok(unwrapped) => unwrapped
     }
   });
-)
+);
 
 #[macro_export]
 macro_rules! result_on_err(
-  ($p:pat <- $e:expr => $bl:block) => ({
+  ($p:pat =<< $e:expr => $bl:block) => ({
     match $e {
       Err($p) => { $bl; }
       _       => {      }
     }
   });
-)
+);
 
 /* this kinda works, but its wonky because
  * matching the list of statements limits normal
@@ -183,7 +183,7 @@ macro_rules! result_on_err(
  * be able to match the "inside" of a block, but
  * im not sure how to do that.
  * macro_rules! result_for2(
- *   ( [ $p:pat <- $e:expr ] $( $st:stmt );* ; ) => ({
+ *   ( [ $p:pat =<< $e:expr ] $( $st:stmt );* ; ) => ({
  *     let mut itr_done = false;
  *     let mut status = match ($e).next() {
  *       Some(x) => match x {
